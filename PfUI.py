@@ -10,6 +10,8 @@ def main():
     # else:
         # sheet["A1"].value = "Hello xlwings!"
     Pf.nbapf_from_xl()
+    Pf.opti_to_xl()
+    Pf.fig_to_xl()
 
 @xw.func
 def hello(name):

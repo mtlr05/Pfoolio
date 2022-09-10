@@ -172,15 +172,44 @@ def Opti(n,b,a,p,t,fmax=0.2,Fmax=0.7):
 def nbapf_from_xl():
     #xw..Range corresponds to the range on the active book and sheet
     sheet = xw.sheets.active
-    n=sheet.range('B23').value
+    n=int(sheet.range('B23').value)
     last = n+1
     b=sheet.range((2,7),(last,7)).value
     a=sheet.range((2,8),(last,8)).value
     p=sheet.range((2,5),(last,5)).value
-    
     t=sheet.range('B27').value
-    fmax=sheet.range('B30').value
-    Fmax=sheet.range('B29').value
+    fmax=sheet.range('B29').value
+    Fmax=sheet.range('B28').value
+    return n,b,a,p,t,fmax,Fmax
+
+def opti_to_xl():
+    sheet = xw.sheets.active
+    n,b,a,p,t,fmax,Fmax = nbapf_from_xl()
     sol,g,m,v = Opti(n=int(n),b=b,a=a,p=p,t=t,fmax=fmax,Fmax=Fmax)
     sheet.range('I2').options(transpose=True).value=sol.x
-    return n,b,a,p
+    sheet.range('B25').value=g-1
+    sheet.range('B26').value=v**0.5
+
+def fig_to_xl():
+    n,b,a,p,t,fmax,Fmax = nbapf_from_xl()
+    tvec = np.linspace(0, t, 10)
+    fopt = np.zeros([len(tvec),n])
+    gopt = np.zeros(len(tvec))
+    vopt = np.zeros(len(tvec))
+    
+    for i in range(len(tvec)):
+        sol,g,m,v = Opti(n,b,a,p,t=tvec[i],fmax=fmax,Fmax=Fmax)
+        fopt[i]=sol.x
+        gopt[i]=g
+        vopt[i]=v
+    
+    #y,m,v,f=DoE(n=n,b=b,a=a,p=p,levels=4,fmax=fmax,Fmax=Fmax)
+    fig, ax = plt.subplots()
+    #ax.scatter(v**0.5*100, (y-1)*100,c=np.sum(f,axis=1),alpha=0.75,edgecolors='black')
+    plt.plot(vopt**0.5*100, (gopt-1)*100,marker='o',markerfacecolor='white')
+    ax.set_xlabel(r'Risk: Semi-Deviation from 20% Return [%]', fontsize=15)
+    ax.set_ylabel(r'Return: 2-yr Growth [%]', fontsize=15)
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+    sheet = xw.sheets.active
+    sheet.pictures.add(fig, name='MyPlot', update=True)
+    #plt.show()
