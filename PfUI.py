@@ -12,7 +12,7 @@ def main():
     Pf.nbapf_from_xl()
     f= Pf.opti_to_xl()
     Pf.bub_to_xl(f)
-    #Pf.fig_to_xl()
+    Pf.fig_to_xl()
 
 @xw.func
 def hello(name):

@@ -195,18 +195,19 @@ def bub_to_xl(f):
     sheet = xw.sheets.active
     n,b,a,p,t,fmax,Fmax = nbapf_from_xl()
     fig, ax = plt.subplots()
-    plt.scatter(np.array(a)*100,np.array(b)*100, s=f*10000, alpha=0.5)
+    plt.scatter(np.array(a)*100,np.array(b)*100, s=f*10000, alpha=0.5, c = p, cmap='summer_r')
     ax.set_xlabel(r'Downside [%]', fontsize=15)
     ax.set_ylabel(r'Upside [%]', fontsize=15)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
     ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+    plt.colorbar(label="Upside Probability [%]")
     
     #labels
     last = n+1
     tickers=sheet.range((2,13),(last,13)).value
     for i in range(n):
 
-        label = tickers[i]
+        label = str(tickers[i])+","+str(round(f[i]*100))+"%"
         plt.annotate(label, # this is the text
                      (np.array(a)[i]*100,np.array(b)[i]*100), # these are the coordinates to position the label
                      textcoords="offset points", # how to position the text
@@ -219,7 +220,8 @@ def bub_to_xl(f):
 def fig_to_xl():
     sheet = xw.sheets.active
     n,b,a,p,t,fmax,Fmax = nbapf_from_xl()
-    tvec = np.linspace(0, t, 10)
+    ttick = 5 
+    tvec = np.linspace(0, t, ttick)
     fopt = np.zeros([len(tvec),n])
     gopt = np.zeros(len(tvec))
     vopt = np.zeros(len(tvec))
@@ -230,12 +232,23 @@ def fig_to_xl():
         gopt[i]=g
         vopt[i]=v
     
-    #y,m,v,f=DoE(n=n,b=b,a=a,p=p,levels=3,fmax=fmax,Fmax=Fmax)
+    #y,m,v,f=DoE(n=n,b=b,a=a,p=p,levels=2,fmax=fmax,Fmax=Fmax)
     fig, ax = plt.subplots()
     #ax.scatter(v**0.5*100, (y-1)*100,c=np.sum(f,axis=1),alpha=0.75,edgecolors='black')
     plt.plot(vopt**0.5*100, (gopt-1)*100,marker='o',markerfacecolor='white')
     ax.set_xlabel(r'Risk: Semi-Deviation from 20% Return [%]', fontsize=15)
     ax.set_ylabel(r'Return: 2-yr Growth [%]', fontsize=15)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+    
+    # #labels
+    # for i in range(ttick):
+
+        # label = tvec[i]
+        # plt.annotate(label, # this is the text
+                     # (vopt**0.5*100, (gopt-1)*100), # these are the coordinates to position the label
+                     # textcoords="offset points", # how to position the text
+                     # xytext=(0,3), # distance from text to points (x,y)
+                     # ha='center') # horizontal alignment can be left, right or center
+    
     sheet.pictures.add(fig, name='Frontier', update=True)
     #plt.show()
