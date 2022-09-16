@@ -217,10 +217,11 @@ def bub_to_xl(f):
 
     sheet.pictures.add(fig, name='Bubble', update=True)
 
-def fig_to_xl():
+def fig_to_xl(ttick = 5):
     sheet = xw.sheets.active
     n,b,a,p,t,fmax,Fmax = nbapf_from_xl()
-    ttick = 5 
+    last = n+1
+    tickers=sheet.range((2,13),(last,13)).value    
     tvec = np.linspace(0, t, ttick)
     fopt = np.zeros([len(tvec),n])
     gopt = np.zeros(len(tvec))
@@ -233,22 +234,25 @@ def fig_to_xl():
         vopt[i]=v
     
     #y,m,v,f=DoE(n=n,b=b,a=a,p=p,levels=2,fmax=fmax,Fmax=Fmax)
-    fig, ax = plt.subplots()
+    fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, constrained_layout=True)
     #ax.scatter(v**0.5*100, (y-1)*100,c=np.sum(f,axis=1),alpha=0.75,edgecolors='black')
-    plt.plot(vopt**0.5*100, (gopt-1)*100,marker='o',markerfacecolor='white')
-    ax.set_xlabel(r'Risk: Semi-Deviation from 20% Return [%]', fontsize=15)
-    ax.set_ylabel(r'Return: 2-yr Growth [%]', fontsize=15)
-    ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+    ax1.plot(vopt**0.5*100, (gopt-1)*100,marker='o',markerfacecolor='white')
+    ax1.set_xlabel(r'Risk: Semi-Deviation from 20% Return [%]', fontsize=10)
+    ax1.set_ylabel(r'Return: 2-yr Growth [%]', fontsize=10)
+    ax1.yaxis.set_major_formatter(mtick.PercentFormatter())
     
-    # #labels
-    # for i in range(ttick):
-
-        # label = tvec[i]
-        # plt.annotate(label, # this is the text
-                     # (vopt**0.5*100, (gopt-1)*100), # these are the coordinates to position the label
-                     # textcoords="offset points", # how to position the text
-                     # xytext=(0,3), # distance from text to points (x,y)
-                     # ha='center') # horizontal alignment can be left, right or center
+    for i in range(len(tvec)):
+        ax1.annotate("t="+str(tvec[i]),xy=(vopt[i]**0.5*100,(gopt[i]-1)*100))
+    
+    for j in range(n):
+        ax2.plot(tvec,fopt[:,j]*100,marker='o',markerfacecolor='white', label=tickers[j])
+        ax2.legend(loc='center left',bbox_to_anchor=(1, 0.5))
+        for p,q in zip(tvec,fopt[:,j]*100):
+            ax2.annotate(str(round(q))+"%",xy=(p,q))
+        
+    ax2.set_xlabel(r't factor', fontsize=10)
+    ax2.set_ylabel(r'Weight in Portfolio[%]', fontsize=10)
+    ax2.yaxis.set_major_formatter(mtick.PercentFormatter())
     
     sheet.pictures.add(fig, name='Frontier', update=True)
-    #plt.show()
+    
